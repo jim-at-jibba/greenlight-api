@@ -8,7 +8,7 @@ type Movie struct {
 	CreateAt time.Time `json:"-"` // hides value from json always
 	Title    string    `json:"title"`
 	Year     int32     `json:"year,omitempty"` // hides if field has no value
-	Runtime  int32     `json:"runtime,omitempty"`
+	Runtime  Runtime   `json:"runtime,omitempty"`
 	Genres   []string  `json:"genres,omitempty"`
 	Version  int32     `json:"version"`
 }
