@@ -61,6 +61,12 @@ func (m MovieModel) Insert(movie *Movie) error {
 }
 
 func (m MovieModel) Get(id int64) (*Movie, error) {
+	// Because id can never be negative why are we not using uint64 (unsigned).
+	// 2 reasons:
+	// 1. Postgres does not support unsigned ints. Its best to align your go
+	// code and database types to avoid compatibility issues
+	// 2. Go database package does not support integer values great than int64
+	// which uint64 might be
 	if id < 1 {
 		return nil, ErrRecordNotFound
 	}
