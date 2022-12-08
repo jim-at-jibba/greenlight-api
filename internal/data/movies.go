@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/jim-at-jibba/greenlight/internal/validator"
+	"github.com/lib/pq"
 )
 
 // All fields are Exported to allow them to be visible to `encoding/json`
@@ -43,8 +44,19 @@ type MovieModel struct {
 	DB *sql.DB
 }
 
+// Takes a *Movie pointer meaning we are updating the values
+// at the location the param points to with the returned values from the
+// insert
 func (m MovieModel) Insert(movie *Movie) error {
-	return nil
+	query := `
+  INSERT INTO movies (title, year, runtime, genres)
+  VALUES ($1, $2, $3, $4)
+  RETURNING id, created_at, version
+  `
+
+	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
+
+	return m.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreateAt, &movie.Version)
 }
 
 func (m MovieModel) Get(id int64) (*Movie, error) {
