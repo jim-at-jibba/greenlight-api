@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -56,8 +57,11 @@ func (m MovieModel) Insert(movie *Movie) error {
   `
 
 	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 
-	return m.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreateAt, &movie.Version)
+	defer cancel()
+
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&movie.ID, &movie.CreateAt, &movie.Version)
 }
 
 func (m MovieModel) Get(id int64) (*Movie, error) {
@@ -80,7 +84,15 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 	// Struct to hold returned data
 	var movie Movie
 
-	err := m.DB.QueryRow(query, id).Scan(
+	// 3 second timeout
+	// context.Background - root context
+	// Good article aboiut context
+	// https://medium.com/@swapnildawange3650/golang-context-is-important-5dc6b6519866
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&movie.ID,
 		&movie.CreateAt,
 		&movie.Title,
@@ -120,7 +132,11 @@ func (m MovieModel) Update(movie *Movie) error {
 		movie.Version,
 	}
 
-	err := m.DB.QueryRow(query, args...).Scan(&movie.Version)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&movie.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -142,7 +158,11 @@ func (m MovieModel) Delete(id int64) error {
   WHERE id = $1
   `
 
-	result, err := m.DB.Exec(query, id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	result, err := m.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
