@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/jim-at-jibba/greenlight/internal/validator"
 	"github.com/julienschmidt/httprouter"
 )
