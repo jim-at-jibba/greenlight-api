@@ -180,15 +180,19 @@ func (m MovieModel) Delete(id int64) error {
 }
 
 func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, error) {
+	// (LOWER(title) = LOWER($1) OR $1 = '') = title = title or is skipped because its empty
+	// @> is the postgres array contains function
 	query := `
   SELECT id, created_at, title, year, runtime, genres, version
   FROM movies
+  WHERE (LOWER(title) = LOWER($1) OR $1 = '')
+  AND (genres @> $2 OR $2 = '{}')
   ORDER BY id`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.QueryContext(ctx, query)
+	rows, err := m.DB.QueryContext(ctx, query, title, pq.Array(genres))
 	if err != nil {
 		return nil, err
 	}
