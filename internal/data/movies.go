@@ -189,6 +189,7 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 	// postgres can understand, strips special chars and adds and operator & between
 	// words
 	// @@ = matches operator
+	// ILIKE and STRPOS() are alternatives to full text search
 	query := `
   SELECT id, created_at, title, year, runtime, genres, version
   FROM movies
