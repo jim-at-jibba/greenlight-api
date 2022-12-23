@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/jim-at-jibba/greenlight/internal/data"
+	"github.com/jim-at-jibba/greenlight/internal/jsonlog"
 	_ "github.com/lib/pq"
 )
 
@@ -37,7 +37,7 @@ type config struct {
 
 type application struct {
 	config config
-	logger *log.Logger
+	logger *jsonlog.Logger
 	models data.Models
 }
 
@@ -53,15 +53,15 @@ func main() {
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgresSQL max connection idle time")
 	flag.Parse()
 
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	db, err := openDB(cfg)
 	if err != nil {
-		logger.Fatal(err)
+		logger.PrintFatal(err, nil)
 	}
 
 	defer db.Close()
-	logger.Printf("database connection pool established")
+	logger.PrintInfo("database connection pool established", nil)
 
 	// Declare an instace of the application sturct
 	app := &application{
@@ -78,9 +78,12 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	logger.Printf("starting %s server on %d", cfg.env, cfg.port)
+	logger.PrintInfo("starting %s server on %d", map[string]string{
+		"addr": srv.Addr,
+		"env":  cfg.env,
+	})
 	err = srv.ListenAndServe()
-	logger.Fatal(err)
+	logger.PrintFatal(err, nil)
 }
 
 func openDB(cfg config) (*sql.DB, error) {
